@@ -1,0 +1,159 @@
+<!--
+ * @Author: jzc
+ * @Date: 2020-07-02 12:18:29
+ * @LastEditTime: 2020-07-06 17:52:15
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \monthToMonth\src\components\echart\lineChart2.vue
+-->
+<template>
+  <div class="line" ref="line"></div>
+</template>
+<script>
+// import EleResize from '@/assets/js/esresize'
+export default {
+  props: {
+    data: {
+      type: Object,
+      default: function() {
+        return {}
+      },
+    },
+  },
+  data() {
+    return {
+      msg: '饼图-半径模式',
+      echartObj: this.data,
+      timeId: null,
+    }
+  },
+  created() {},
+  mounted() {
+    this.drawLineCustom(this.echartObj)
+  },
+  destroyed() {
+    clearInterval(this.timeId)
+  },
+  methods: {
+    drawLineCustom(obj) {
+      var myChart = this.$echarts.init(this.$refs.line)
+      let option = {
+        title: {
+          text: '累计共享量' + '\n' + obj.number + '亿条', // 图形标题，配置在中间对应效果图的80%
+          left: 'center',
+          top: '45%',
+          textStyle: {
+            color: 'rgb(255,255,255)',
+            fontSize: 14,
+            align: 'center',
+          },
+        },
+        tooltip: {
+          trigger: 'item',
+        },
+        color: ['#E1503F', '#0079C8'],
+        legend: {
+          show: false,
+        },
+        series: [
+          {
+            name: '访问来源',
+            type: 'pie',
+            center: ['50%', '50%'],
+            radius: ['35%', '55%'],
+            avoidLabelOverlap: false,
+            hoverAnimation: true, // 是否自动放大缩小
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: '14',
+                fontWeight: 'bold',
+              },
+            },
+            label: {
+              formatter: '{b}\n{c}',
+              lineHeight: 20,
+              rich: {
+                time: {
+                  fontSize: 10,
+                  color: '#999',
+                },
+              },
+              // normal: {
+              //   show: true,
+              //   position: 'center',
+              //   color: '#ffffff',
+              //   fontSize: 16,
+              //   fontWeight: 'bold',
+              //   formatter: '',
+              // },
+            },
+            labelLayout: function(params) {
+              var isLeft = params.labelRect.x < myChart.getWidth() / 2
+              var points = params.labelLinePoints
+              // Update the end point.
+              points[2][0] = isLeft
+                ? params.labelRect.x
+                : params.labelRect.x + params.labelRect.width
+
+              return {
+                labelLinePoints: points,
+              }
+            },
+            data: obj.data
+              ? obj.data
+              : [
+                { value: 4166, name: '库表数据共享' },
+                { value: 2017, name: '接口数据共享' },
+              ],
+          },
+        ],
+      }
+
+      myChart.setOption(option, true)
+      var charPie3currentIndex = 0
+      this.timeId = setInterval(function() {
+        var dataLen = option.series[0].data.length
+        // 取消之前高亮的图形
+        myChart.dispatchAction({
+          type: 'downplay',
+          seriesIndex: 0,
+          dataIndex: charPie3currentIndex,
+        })
+        charPie3currentIndex = (charPie3currentIndex + 1) % dataLen
+        // 高亮当前图形
+        myChart.dispatchAction({
+          type: 'highlight',
+          seriesIndex: 0,
+          dataIndex: charPie3currentIndex,
+        })
+      }, 3000)
+
+      // EleResize.on(this.$refs.line, () => {
+      //   myChart.resize()
+      // })
+    },
+  },
+
+  watch: {
+    echartObj: {
+      immediate: true,
+      deep: true,
+      handler: function(newValue, oldValue) {
+        this.$nextTick(() => {
+          clearInterval(this.timeId)
+          this.drawLineCustom(newValue)
+        })
+      },
+    },
+  },
+}
+</script>
+
+<style lang="less" scoped>
+.line {
+  width: 100%;
+  height: 100%;
+  // color: rgb(46, 137, 155);
+}
+</style>
